@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dropdown > div > span:nth-child(2) {
+  max-width: 120px;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
