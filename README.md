@@ -1,6 +1,6 @@
 # Project Shadow
 
-This is a project from the web3con hackathon which is an app that allows organizations to manage wallet verification and build on top of it with API keys and form validations.
+This is a project from the [web3con](https://www.web3con.dev) hackathon which is an app that allows organizations to manage wallet verification and build on top of it with API keys and form validations.
 
 ![Shadow Interface](/README/shadow-interface.png "Shadow Inteface")
 
