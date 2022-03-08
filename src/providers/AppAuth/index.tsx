@@ -47,7 +47,7 @@ const actionTypes = {
  */
 const PATHS = {
   ROOT: ['', '/'],
-  PUBLIC: ['/signin', '/signup', '/validate', '/members'],
+  PUBLIC: ['/signin', '/signup', '/validate', '/members', '/forgot'],
   PRIVATE: '/dashboard'
 }
 
@@ -129,6 +129,8 @@ const AppAuthProvider: React.FC = ({ children }) => {
     if (session && [...PATHS.PUBLIC, '/', '/dashboard'].includes(pathname)) {
       navigate('/dashboard/organizations');
     } else if (!session && pathname.startsWith(PATHS.PRIVATE)) {
+      navigate('/signin');
+    } else if (!session && (pathname === '/' || pathname === '')) {
       navigate('/signin');
     }
 

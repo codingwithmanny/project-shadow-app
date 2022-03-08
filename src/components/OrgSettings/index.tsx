@@ -1,17 +1,15 @@
 // Imports
 // ========================================================
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from 'react-query'
-import { Search } from 'react-feather';
 import { useAuth } from "../../providers/Supabase";
 import { MEMBERS, ORGS } from '../../queries';
 import Heading from "../../components/Heading";
 import Text from "../../components/Text";
-import Button from '../../components/Button';
+import Button from "../../components/Button";
 import Loader from '../../components/Loader';
 import Label from '../../components/Label';
 import Input from '../../components/Input';
-import Modal from '../../components/Modal';
 import useDebounce from '../../hooks/useDebounce';
 
 const getModalTitle = (modal: string) => {
@@ -38,21 +36,15 @@ const getModalTitle = (modal: string) => {
 // ========================================================
 const OrgSettings = ({ orgId }: { orgId: string }) => {
   // State / Props
-  const [search, setSearch] = useState('')
-  const debouncedSearch = useDebounce(search);
+  const [copied, setCopied] = useState({
+    api: false,
+    secret: false
+  });
+  const inputApiKey = useRef();
+  const inputSecretKey = useRef();
   const isMounted = useRef(false);
   const { session } = useAuth();
-  const [input, setInput] = useState<{
-    name: string;
-    walletAddress: string;
-    enabled?: boolean;
-  }>({
-    name: '',
-    walletAddress: '',
-    enabled: undefined
-  });
   const [showModal, setShowModal] = useState('');
-  const { modalTitle, modalDescription } = getModalTitle(showModal)
 
   // Requests
   /**
@@ -65,13 +57,52 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
    */
   const { isLoading: isSubmitting, data: membersCreateData, error: membersCreateError, mutate: membersCreate } = useMutation(MEMBERS.CREATE);
 
+  /**
+   * UPDATE
+   */
+  const { isLoading: isUpdating, data: orgUpdateData, error: orgUpdateError, mutate: orgUpdate, reset: orgUpdateReset } = useMutation(ORGS.UPDATE);
+
   // Functions
   /**
    * 
    */
-  const onClickVisibility = () => {
+  const copyKey = (ref: React.MutableRefObject<undefined>) => () => {
+    if (ref.current) {
+      const current = (ref.current as any)
+      current.select();
+      current.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(current.value);
 
+      if (current.id === 'apiKey') {
+        setCopied({
+          ...copied,
+          api: true
+        });
+      } else if ('secretKey') {
+        setCopied({
+          ...copied,
+          secret: true
+        });
+      }
+      setTimeout(() => {
+        setCopied({
+          api: false,
+          secret: false
+        });
+      }, 1000);
+    }
   }
+
+  /**
+   * 
+   */
+  const onClickUpdateVisibility = () => {
+    orgUpdate({
+      token: session?.access_token, id: orgId, payload: {
+        public: !orgReadData.public
+      }
+    });
+  };
 
   // Hooks
   /**
@@ -79,9 +110,7 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
    */
   useEffect(() => {
     isMounted.current = true;
-
     orgRead({ token: session?.access_token, id: orgId })
-
     return () => {
       isMounted.current = false;
     }
@@ -92,23 +121,20 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
    */
   useEffect(() => {
     if (!isMounted.current || !membersCreateData || membersCreateError) return;
-
-    // membersList({ token: session?.access_token, id: orgId });
     setShowModal('');
-    setSearch('');
   }, [membersCreateData]);
 
   /**
    * 
    */
   useEffect(() => {
-    if (!isMounted.current) return;
-    // membersList({ token: session?.access_token, id: orgId, q: debouncedSearch });
-  }, [debouncedSearch]);
+    if (!orgUpdateData || orgUpdateError) return;
+    orgRead({ token: session?.access_token, id: orgId });
+  }, [orgUpdateData]);
 
   // Render
   return <div>
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-8 h-12">
       <Heading as="h4">Settings</Heading>
     </div>
     <div className="w-full">
@@ -126,21 +152,27 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
           </div>
           <div className="mb-8">
             <Label className="mb-2">API Key</Label>
-            <Input id="apiKey" className="w-full" value={(orgReadData as any)?.apiKey ?? ''} />
+            <div className="items-center grid grid-cols-1 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <Input readOnly forwardRef={inputApiKey as any} id="apiKey" className="lg:col-span-4 xl:col-span-5" value={(orgReadData as any)?.apiKey ?? ''} />
+              <Button onClick={copyKey(inputApiKey)} variant="gray">{copied.api ? 'Copied!' : 'Copy'}</Button>
+            </div>
           </div>
           <div className="mb-8">
             <Label className="mb-2">Secret Key</Label>
-            <Input id="secretKey" className="w-full" value={(orgReadData as any)?.secretKey ?? ''} />
+            <div className="items-center grid grid-cols-1 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <Input readOnly forwardRef={inputSecretKey as any} id="secretKey" className="lg:col-span-4 xl:col-span-5" value={(orgReadData as any)?.secretKey ?? ''} />
+              <Button onClick={copyKey(inputSecretKey)} variant="gray">{copied.secret ? 'Copied!' : 'Copy'}</Button>
+            </div>
           </div>
           <div className="mb-4">
             <Label className="mb-2">Visibility</Label>
             <div className="flex items-center">
-              <span onClick={onClickVisibility} className={`border mr-2 cursor-pointer relative block rounded-full w-20 overflow-hidden ${(orgReadData as any)?.public ? 'bg-green-500 ' : 'bg-slate-200'}`}>
+              <span onClick={onClickUpdateVisibility} className={`${isUpdating ? 'opacity-40' : ''}border mr-2 cursor-pointer relative block rounded-full w-20 overflow-hidden ${(orgReadData as any)?.public ? 'bg-green-500 ' : 'bg-slate-200'}`}>
                 <span className={`flex ${(orgReadData as any)?.public ? 'justify-end ' : ''}  border-2 border-white w-full rounded-full`}>
                   <span className="block h-10 w-10 rounded-full bg-slate-700"></span>
                 </span>
               </span>
-              <Text>{(orgReadData as any)?.public ? 'Public' : 'Private'}</Text>
+              {isUpdating ? <Loader className="h-6 stroke-slate-600" /> : <Text>{(orgReadData as any)?.public ? 'Public' : 'Private'}</Text>}
             </div>
           </div>
         </div>

@@ -202,8 +202,41 @@ const ORGS = {
 
     return json?.data ?? json;
   },
-  UPDATE: async () => {},
-  DELETE: async () => {},
+  UPDATE: async ({ token, id, payload }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/orgs/${id}`, {
+      method: "put",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  DELETE: async ({ token, id }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/orgs/${id}`, {
+      method: "delete",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
 };
 
 /**
@@ -268,11 +301,83 @@ const MEMBERS = {
   DELETE: () => {},
 };
 
+const FORMS = {
+  LIST: async ({
+    token,
+    id,
+    q,
+    take,
+    skip,
+    orderBy,
+    sort,
+    include,
+  }: PayloadType) => {
+    const result = await fetch(
+      `${API_URI}/orgs/${id}/forms${buildQuery({
+        q,
+        take,
+        skip,
+        orderBy,
+        sort,
+        include,
+      })}`,
+      {
+        headers: {
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+};
+
 /**
  *
  */
 const HOOKS = {
-  LIST: () => {},
+  LIST: async ({
+    token,
+    id,
+    q,
+    take,
+    skip,
+    orderBy,
+    sort,
+    include,
+  }: PayloadType) => {
+    const result = await fetch(
+      `${API_URI}/orgs/${id}/hooks${buildQuery({
+        q,
+        take,
+        skip,
+        orderBy,
+        sort,
+        include,
+      })}`,
+      {
+        headers: {
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
   CREATE: () => {},
   READ: () => {},
   UPDATE: () => {},
@@ -303,4 +408,4 @@ const VERIFY = {
 
 // Exports
 // ========================================================
-export { AUTH, USERS, ORGS, MEMBERS, HOOKS, VERIFY };
+export { AUTH, USERS, ORGS, MEMBERS, FORMS, HOOKS, VERIFY };

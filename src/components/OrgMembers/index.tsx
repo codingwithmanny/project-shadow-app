@@ -120,7 +120,6 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
   useEffect(() => {
     isMounted.current = true;
     membersList({ token: session?.access_token, id: orgId });
-
     return () => {
       isMounted.current = false;
     }
@@ -132,7 +131,7 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
   useEffect(() => {
     if (!isMounted.current || !membersCreateData || membersCreateError) return;
 
-    // membersList({ token: session?.access_token, id: orgId });
+    membersList({ token: session?.access_token, id: orgId });
     setShowModal('');
     setSearch('');
   }, [membersCreateData]);
@@ -175,7 +174,10 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
                 <tr key={`${member.id}`} onClick={onClickEditMember(member.id)} className="border-b border-l-slate-200 hover:bg-slate-50 cursor-pointer">
                   <td className="p-4 w-3/4">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 block bg-slate-200 rounded-full mr-4"></div>
+                      <svg height="48" width="48" className="block h-12 w-12 fill-slate-200 mr-4">
+                        <circle cx="24" cy="24" r="24" />
+                        <text x="50%" y="52%" dominantBaseline="middle" textAnchor="middle" className="fill-slate-400 w-12 font-medium text-center block">0x{member?.walletAddress.slice(2, 3)}</text>
+                      </svg>
                       <code className="text-slate-500">{member?.walletAddress}</code>
                     </div>
                   </td>
@@ -209,10 +211,10 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
             ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{(membersCreateError as any)?.message ?? 'Unknown error.'}</div>
             : null
           }
-          <div className="flex justify-end">
+          <div className="flex flex-col md:flex-row">
             {!isSubmitting ? <Button onClick={() => {
               setShowModal('');
-            }} variant="gray" disabled={isSubmitting} className="flex justify-center items-center mr-4" type="button">
+            }} variant="grayNoWidth" disabled={isSubmitting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
               {isSubmitting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
             </Button> : null}
 

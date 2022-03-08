@@ -1,9 +1,8 @@
 // Imports
 // ========================================================
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth, useTable } from '../../providers/Supabase';
-import { useAppAuth } from "../../providers/AppAuth";
 import { User, Lock } from 'react-feather';
 
 // Presentation components
@@ -14,7 +13,6 @@ import Label from "../../components/Label";
 import Button from "../../components/Button";
 import Heading from "../../components/Heading";
 import Text from "../../components/Text";
-// import { useAuthLoader } from "../../providers/AuthLoaderProvider";
 
 // Main page
 // ========================================================
@@ -29,12 +27,8 @@ const AccountPage = () => {
   const [isRetrieving, setIsRetrieving] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
-
   const [error, setError] = useState<any>();
-  // const { profile } = useAppAuth();
   const [data, setData] = useState<any>();
-  // const { pathname } = useLocation();
-  // const { isLoading, signUp, signIn, user, signOut } = useAuth();
   const { client } = useTable();
   const [isLoadingForm, setIsLoadingForm] = useState(false);
   const isFormDisabled = isLoadingForm || isSubmitting || isSendingReset;
@@ -173,9 +167,9 @@ const AccountPage = () => {
 
         <section>
           <div className="rounded-lg bg-white border border-slate-200 flex flex-wrap">
-            <div className="block w-full md:w-1/5 border-b md:border-r md:border-b-0 border-slate-200">
+            <div className="block w-full md:w-2/6 xl:w-1/5 border-b md:border-r md:border-b-0 border-slate-200">
               <ul>
-                <li className="mt-4">
+                <li>
                   <Text>
                     <Link className="h-16 hover:bg-slate-100 transition-all ease-out duration-200 flex items-center leading-10 px-6 font-medium" to="/dashboard/account">
                       <User className="text-slate-800 mr-2" />
@@ -188,12 +182,13 @@ const AccountPage = () => {
                     <Link className="h-16 hover:bg-slate-100 transition-all ease-out duration-200 flex items-center leading-10 px-6 font-medium" to="/dashboard/account">
                       <Lock className="text-slate-800 mr-2" />
                       Security
+                      <small className='ml-2 text-xs text-slate-400'>(Coming soon)</small>
                     </Link>
                   </Text>
                 </li>
               </ul>
             </div>
-            <div className="block w-full md:w-4/5 py-10 px-8 md:px-10">
+            <div className="block w-full md:w-4/6 xl:w-4/5 py-10 px-8 md:px-10">
               <Heading as="h4" className="mb-4">General Info</Heading>
               {isRetrieving ?
                 <Loader className="stroke-slate-400" />
@@ -211,8 +206,8 @@ const AccountPage = () => {
                     ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{error?.message ?? 'Unknown error.'}</div>
                     : null
                   }
-                  <div className="flex justify-end">
-                    {!isSubmitting ? <Button onClick={onClickReset} variant="gray" disabled={isFormDisabled} className="flex justify-center items-center mr-4" type="submit">
+                  <div className="flex flex-col md:flex-row">
+                    {!isSubmitting ? <Button onClick={onClickReset} variant="grayNoWidth" disabled={isFormDisabled} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
                       {isFormDisabled ? <Loader className="h-6 stroke-slate-600" /> : 'Reset Password'}
                     </Button> : null}
 

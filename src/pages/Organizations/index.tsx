@@ -49,53 +49,7 @@ const OrganizationsPage = () => {
       ...input,
       [field as 'name']: event.target.value
     });
-  }
-
-  /**
-   * 
-   */
-  // const query = useCallback(async () => {
-  // setIsLoading(true);
-
-  // const { data, error } = await client.from('organizations').select('*').eq('user_id', `${profile?.id}`)
-
-  // if (isMounted.current) {
-  //   if (error) {
-  //     setError(error);
-  //     setIsLoading(false);
-  //     return;
-  //   }
-
-  //   setData(data);
-  //   setIsLoading(false);
-  // }
-  // }, []);
-
-  // /**
-  //  * 
-  //  */
-  // const create = useCallback(async ({ name }) => {
-  //   setIsSubmitting(true);
-
-  //   const { data, error } = await client.from('organizations').insert([
-  //     {
-  //       name,
-  //       user_id: `${user?.id}`
-  //     }
-  //   ]);
-
-  //   if (isMounted.current) {
-  //     if (error) {
-  //       setError(error);
-  //       setIsSubmitting(false);
-  //       return;
-  //     }
-
-  //     console.log({ data });
-  //     navigate(`/dashboard/organizations/${data?.[0]?.id}`)
-  //     setIsSubmitting(false);
-  //   }
-  // }, [])
+  };
 
   /**
    * 
@@ -104,7 +58,7 @@ const OrganizationsPage = () => {
   const onSubmitForm = (event: React.FormEvent<HTMLFormElement>) => {
     orgCreate({ token: session?.access_token, payload: input });
     event.preventDefault();
-  }
+  };
 
   // Hooks
   /**
@@ -124,7 +78,7 @@ const OrganizationsPage = () => {
   useEffect(() => {
     if (!orgCreateData) return;
     navigate(`/dashboard/organizations/${orgCreateData.id}`);
-  }, [orgCreateData])
+  }, [orgCreateData]);
 
   // Render
   return <DashboardLayout>
@@ -153,7 +107,7 @@ const OrganizationsPage = () => {
                 <div className="flex items-center mb-8">
                   <svg height="48" width="48" className="block h-12 w-12 fill-slate-200 mr-4">
                     <circle cx="24" cy="24" r="24" />
-                    <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="fill-slate-400 w-12 font-medium text-center block uppercase">{org.name.slice(0, 1)}</text>
+                    <text x="50%" y="52%" dominantBaseline="middle" textAnchor="middle" className="fill-slate-400 w-12 font-medium text-center block uppercase">{org.name.slice(0, 1)}</text>
                   </svg>
                   <Heading title={`${org.name}`} as="h4" className="w-2/3 whitespace-nowrap overflow-hidden text-ellipsis">{org.name}</Heading>
                 </div>
@@ -170,69 +124,8 @@ const OrganizationsPage = () => {
                 </div>
               </div>
           }
-
-          {/* <Link to={``} className="rounded-lg bg-white border border-slate-200 p-8 hover:border-slate-400 hover:shadow transition-colors ease-in-out duration-200">
-              <div className="flex items-center mb-8">
-                <div className="h-12 w-12 block bg-slate-200 rounded-full mr-4"></div>
-                <Heading as="h4" className="w-2/3 whitespace-nowrap overflow-hidden text-ellipsis">Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor</Heading>
-              </div>
-              <div className="flex text-slate-800" title="Members">
-                <Users className="text-slate-400 w-5 mr-2" />
-                0 Members
-              </div>
-            </Link>
-            <Link to={``} className="rounded-lg bg-white border border-slate-200 p-8 hover:border-slate-400 hover:shadow transition-colors ease-in-out duration-200">
-              <div className="flex items-center mb-8">
-                <div className="h-12 w-12 block bg-slate-200 rounded-full mr-4"></div>
-                <Heading as="h4" className="w-2/3 whitespace-nowrap overflow-hidden text-ellipsis">Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor</Heading>
-              </div>
-              <div className="flex text-slate-800" title="Members">
-                <Users className="text-slate-400 w-5 mr-2" />
-                37 Members
-              </div>
-            </Link>
-            <Link to={``} className="rounded-lg bg-white border border-slate-200 p-8 hover:border-slate-400 hover:shadow transition-colors ease-in-out duration-200">
-              <div className="flex items-center mb-8">
-                <div className="h-12 w-12 block bg-slate-200 rounded-full mr-4"></div>
-                <Heading as="h4" className="w-2/3 whitespace-nowrap overflow-hidden text-ellipsis">Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor</Heading>
-              </div>
-              <div className="flex text-slate-800" title="Members">
-                <Users className="text-slate-400 w-5 mr-2" />
-                76 Members
-              </div>
-            </Link>
-            <Link to={``} className="rounded-lg bg-white border border-slate-200 p-8 hover:border-slate-400 hover:shadow transition-colors ease-in-out duration-200">
-              <div className="flex items-center mb-8">
-                <div className="h-12 w-12 block bg-slate-200 rounded-full mr-4"></div>
-                <Heading as="h4" className="w-2/3 whitespace-nowrap overflow-hidden text-ellipsis">Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor Lorem Ipsum Dolor</Heading>
-              </div>
-              <div className="flex text-slate-800" title="Members">
-                <Users className="text-slate-400 w-5 mr-2" />
-                3 Members
-              </div>
-            </Link> */}
-
-          {/* <table>
-              <thead>
-                <tr>
-                  <th>{JSON.stringify(data, null, ' ')}</th>
-                </tr>
-              </thead>
-            </table> */}
         </div>
       </section>
-      {/* <Button onClick={onClickSignOut} className="mb-8">Sign Out</Button><br />
-
-        <Button onClick={onClickGetAccount} className="mb-8">Make API Request</Button>
-
-        <Text><small>Supabase Session</small></Text> */}
-      {/* <pre className="bg-gray-200 p-4 overflow-scroll max-h-96">
-          <code>{session ? <div>{JSON.stringify(session, null, ' ')}</div> : null}</code>
-        </pre>
-
-        <pre className="bg-gray-200 p-4 overflow-scroll max-h-96">
-          <code>{profile ? <div>{JSON.stringify(profile, null, ' ')}</div> : null}</code>
-        </pre> */}
     </div>
 
     <Modal isCloseEnabled={!isSubmitting} title="Create" description="New organization" onClose={() => setShowModal('')} isVisible={showModal.length > 0}>
@@ -245,11 +138,11 @@ const OrganizationsPage = () => {
           ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{(orgCreateError as any)?.message ?? 'Unknown error.'}</div>
           : null
         }
-        <div className="flex justify-end">
+        <div className="flex flex-col md:flex-row">
           {!isSubmitting ? <Button onClick={() => {
             setInput({ name: '' });
             setShowModal('');
-          }} variant="gray" disabled={isSubmitting} className="flex justify-center items-center mr-4" type="button">
+          }} variant="grayNoWidth" disabled={isSubmitting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
             {isSubmitting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
           </Button> : null}
 

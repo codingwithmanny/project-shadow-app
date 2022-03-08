@@ -10,9 +10,7 @@ import OrganizationPage from '../pages/Organization';
 import AccountPage from '../pages/Account';
 import ValidatePage from '../pages/Validate';
 import NotFoundPage from '../pages/NotFound';
-// import AccountPage from '../pages/Account';
-// import OrganizationsPage from '../pages/Organizations';
-// import HooksPage from '../pages/Hooks';
+import ForgotPage from '../pages/Forgot';
 
 // Main Routes
 // ========================================================
@@ -22,6 +20,7 @@ const RootRoutes = () => {
     <Route path="/" element={<span></span>} />
     <Route path="/signup" element={<SignUpPage />} />
     <Route path="/signin" element={<SignInPage />} />
+    <Route path="/forgot" element={<ForgotPage />} />
     <Route path="/dashboard/organizations" element={<OrganizationsPage />} />
     <Route path="/dashboard/organizations/:id" element={<OrganizationPage />} />
     <Route path="/dashboard/organizations/:id/settings" element={<OrganizationPage />} />
