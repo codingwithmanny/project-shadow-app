@@ -1,6 +1,6 @@
 // Imports
 // ========================================================
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from '../../providers/Supabase';
 
@@ -15,14 +15,14 @@ import Loader from "../../components/Loader";
 
 // Main Page
 // ========================================================
-const SignInPage = () => {
+const ForgotPage = () => {
   // State / Props
   const [input, setInput] = useState({
     email: '',
-    password: ''
   });
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn, error } = useAuth();
+  const { resetPassword, error } = useAuth();
 
   // Functions
   /**
@@ -30,8 +30,17 @@ const SignInPage = () => {
    * @param event 
    */
   const onSubmitForm = (event: React.FormEvent<HTMLFormElement>) => {
+    setHasSubmitted(false);
     setIsSubmitting(true);
-    signIn(input);
+    resetPassword(input);
+
+    setTimeout(() => {
+      setHasSubmitted(true);
+      setIsSubmitting(false);
+      setInput({
+        email: ''
+      });
+    }, 300);
     event.preventDefault();
   };
 
@@ -47,31 +56,21 @@ const SignInPage = () => {
     });
   };
 
-  // Hooks
-  /**
-   * 
-   */
-  useEffect(() => {
-    if (!error) return;
-    setIsSubmitting(false);
-  }, [error]);
-
   // Render
   return <AuthLayout>
     <div className="max-w-md bg-white w-full pt-10 pb-12 px-8 m-4 lg:p-10 border border-gray-300 shadow-md rounded-md">
       <div className="mb-6 flex justify-between items-center">
-        <Heading as="h1" >Sign In</Heading>
-        {!isSubmitting ? <Text className="text-right">Don't have an account?<br /><Link className="text-slate-700 font-medium hover:underline" to="/signup">Create an account</Link>.</Text> : null}
+        <Heading as="h1" >Forgot?</Heading>
+        {!isSubmitting ? <Text className="text-right w-1/2">Go back to <Link className="text-slate-700 font-medium hover:underline" to="/signin">Sign In</Link>.</Text> : null}
       </div>
       <form onSubmit={onSubmitForm}>
         <div className="mb-6">
           <Label htmlFor="email" className="mb-2">Email address</Label>
           <Input disabled={isSubmitting} required className="w-full" onChange={onChangeInput('email')} type="email" name="email" id="email" placeholder="your@email.com"></Input>
         </div>
-        <div className="mb-8">
-          <Label htmlFor="password" className="mb-2">Password</Label>
-          <Input disabled={isSubmitting} required className="w-full" onChange={onChangeInput('password')} type="password" name="password" id="password" placeholder="••••••••"></Input>
-        </div>
+        {hasSubmitted ? <div className="mb-6">
+          <Text>If there is an account, please check your email.</Text>
+        </div> : null}
         {error
           ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{error?.message ?? 'Unknown error.'}</div>
           : null
@@ -79,9 +78,8 @@ const SignInPage = () => {
         <div className="">
         </div>
         <div className="flex items-center justify-between">
-          <Text><Link className="text-slate-700 font-medium hover:underline" to="/forgot">Forgot password?</Link></Text>
           <Button disabled={isSubmitting} className="flex justify-center items-center" type="submit">
-            {isSubmitting ? <Loader className="h-6 stroke-slate-100" /> : 'Sign In'}
+            {isSubmitting ? <Loader className="h-6 stroke-slate-100" /> : 'Submit'}
           </Button>
         </div>
       </form>
@@ -91,4 +89,4 @@ const SignInPage = () => {
 
 // Exports
 // ========================================================
-export default SignInPage;
+export default ForgotPage;

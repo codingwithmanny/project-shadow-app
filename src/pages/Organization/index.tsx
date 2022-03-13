@@ -1,10 +1,10 @@
 // Imports
 // ========================================================
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, AlignLeft, Anchor, ChevronRight, Search, Settings, Users } from 'react-feather';
+import { AlertCircle, AlignLeft, Anchor, ChevronRight, Settings, Users } from 'react-feather';
 import { useMutation } from 'react-query';
-import { useAuth, useTable } from '../../providers/Supabase';
+import { useAuth } from '../../providers/Supabase';
 import { ORGS } from '../../queries';
 import DashboardLayout from "../../layouts/Dashboard";
 import Loader from "../../components/Loader";
@@ -16,7 +16,14 @@ import Input from '../../components/Input';
 import Modal from '../../components/Modal';
 import OrgMembers from '../../components/OrgMembers';
 import OrgSettings from '../../components/OrgSettings';
+import OrgForms from '../../components/OrgForms';
+import OrgHooks from '../../components/OrgHooks';
 
+/**
+ * 
+ * @param modal 
+ * @returns 
+ */
 const getModalTitle = (modal: string) => {
   switch (modal) {
     case 'delete':
@@ -28,11 +35,6 @@ const getModalTitle = (modal: string) => {
       return {
         modalTitle: 'Edit',
         modalDescription: 'Edit details'
-      }
-    case 'create':
-      return {
-        modalTitle: 'Create',
-        modalDescription: 'New member'
       }
     default:
       return {
@@ -51,18 +53,11 @@ const Organization = () => {
     name: ''
   });
   const [showModal, setShowModal] = useState('');
-  // const [isRetrieving, setIsRetrieving] = useState(true);
-  // const [isDeleting, setIsDeleting] = useState(false);
-  // const [isCreating, setIsCreating] = useState(false);
   const { id } = useParams();
   const { session } = useAuth();
-  const [error, setError] = useState<any>();
-  const [data, setData] = useState<any>();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { modalTitle, modalDescription } = getModalTitle(showModal);
-
-
 
   // Requests
   /**
@@ -71,103 +66,36 @@ const Organization = () => {
   const { isLoading: isRetrieving, data: orgReadData, error: orgReadError, mutate: orgRead } = useMutation(ORGS.READ);
 
   /**
+   * UPDATE
+   */
+  const { isLoading: isUpdating, data: orgUpdateData, error: orgUpdateError, mutate: orgUpdate, reset: orgUpdateReset } = useMutation(ORGS.UPDATE);
+
+  /**
    * DELETE
    */
-  const { isLoading: isDeleting, data: orgDeleteData, error: orgDeleteError, mutate: orgDelete } = useMutation(ORGS.DELETE);
+  const { isLoading: isDeleting, data: orgDeleteData, error: orgDeleteError, mutate: orgDelete, reset: orgDeleteReset } = useMutation(ORGS.DELETE);
 
-  // // Functions
-  // /**
-  //  * 
-  //  */
-  // const QUERY = useCallback(async ({ id }) => {
-  //   setIsRetrieving(true);
-
-  //   const { data, error } = await client.from('organizations').select('*').eq('id', `${id}`).single();
-
-  //   if (isMounted.current) {
-  //     if (error) {
-  //       setError(error);
-  //       setIsRetrieving(false);
-  //       return;
-  //     }
-
-  //     setData(data);
-  //     setIsRetrieving(false);
-  //   }
-  // }, []);
-
-  // /**
-  //  * 
-  //  */
-  // const DELETE = useCallback(async ({ id }) => {
-  //   setIsDeleting(true);
-
-  //   const { data, error } = await client.from('organizations').delete().eq('id', `${id}`).single();
-
-  //   if (isMounted.current) {
-  //     if (error) {
-  //       setError(error);
-  //       setIsDeleting(false);
-  //       return;
-  //     }
-
-  //     navigate('/dashboard/organizations')
-  //   }
-  // }, []);
-
-  // /**
-  //  * 
-  //  */
-  // const CREATE = useCallback(async ({ id, name }) => {
-  //   setIsCreating(true);
-
-  //   const { data, error } = await client.from('org_members').insert([
-  //     {
-  //       name,
-  //       org_id: id
-  //     }
-  //   ]);
-
-  //   if (isMounted.current) {
-  //     if (error) {
-  //       setError(error);
-  //       setIsCreating(false);
-  //       return;
-  //     }
-
-  //     setData(data);
-  //     setIsCreating(false);
-  //   }
-
-  //   setInput({
-  //     name: ''
-  //   });
-  // }, []);
-
-  /**
-   * 
-   * @param event 
-   */
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    // DELETE({ id });
-    event.preventDefault();
-  }
-
-  /**
-   * 
-   * @param event 
-   */
-  const onSubmitCreate = (event: React.FormEvent<HTMLFormElement>) => {
-    // CREATE({ id, name: input.name });
-    event.preventDefault();
-  }
-
+  // Functions
   /**
    * 
    */
   const onClickDelete = () => {
     setShowModal('delete');
   };
+
+  /**
+   * 
+   */
+  const onClickEdit = () => {
+    setShowModal('edit');
+  };
+
+  /**
+   * 
+   */
+  const onSubmitDelete = () => {
+    orgDelete({ token: session?.access_token, id: orgReadData.id })
+  }
 
   /**
    * 
@@ -178,10 +106,22 @@ const Organization = () => {
     setInput({
       ...input,
       [field]: event.target.value,
-    })
-  }
+    });
+  };
+
+  /**
+   * 
+   * @param event 
+   */
+  const onSubmitFormEdit = (event: React.FormEvent<HTMLFormElement>) => {
+    orgUpdate({ token: session?.access_token, id, payload: input });
+    event.preventDefault();
+  };
 
   // Hooks
+  /**
+   * On mount retrieve current org
+   */
   useEffect(() => {
     isMounted.current = true;
     orgRead({ token: session?.access_token, id })
@@ -190,6 +130,46 @@ const Organization = () => {
     }
   }, []);
 
+  /**
+   * If modal is closed reset the modal errors and values
+   */
+  useEffect(() => {
+    if (showModal) return;
+    orgDeleteReset();
+    orgUpdateReset();
+    setInput({
+      name: orgReadData?.name
+    });
+  }, [showModal]);
+
+  /**
+   * When org data retrieved set input
+   */
+  useEffect(() => {
+    if (!orgReadData) return;
+    setInput({
+      name: orgReadData.name
+    });
+  }, [orgReadData]);
+
+  /**
+   * If deletion complete redirect to orgs
+   */
+  useEffect(() => {
+    if (!orgDeleteData || orgDeleteError || isDeleting) return;
+    navigate('/dashboard/organizations');
+  }, [orgDeleteData]);
+
+  /**
+   * If org updated refetch data
+   */
+  useEffect(() => {
+    if (!orgUpdateData || orgUpdateError) return;
+    orgRead({ token: session?.access_token, id });
+    setShowModal('');
+  }, [orgUpdateData]);
+
+  // Render
   return <DashboardLayout>
     <div className="p-8 flex flex-col h-full">
       <div className="mb-8">
@@ -199,14 +179,13 @@ const Organization = () => {
       </div>
 
       <header className="pb-10 flex justify-between items-center">
-
         <div>
           <Heading as="h1" className="mb-2">Organization</Heading>
           <Text>Edit and see members</Text>
         </div>
-        {!isRetrieving && !orgReadError ? <div>
+        {!isRetrieving && !orgReadError ? <div className="flex justify-end">
           <Button className="mr-4" onClick={onClickDelete}>Delete</Button>
-          <Button variant="gray" onClick={() => { }}>Edit</Button>
+          <Button variant="grayNoWidth" onClick={onClickEdit}>Edit</Button>
         </div> : null}
       </header>
 
@@ -219,7 +198,7 @@ const Organization = () => {
             </div>
           </div>
             : orgReadData && !orgReadError ? <div className="rounded-lg  flex flex-wrap">
-              <div className="block w-full md:w-1/5 border-b md:border-r md:border-b-0 border-slate-200">
+              <div className="block w-full md:w-2/6 xl:w-1/5 border-b md:border-r md:border-b-0 border-slate-200">
                 <ul>
                   <li>
                     <Text>
@@ -239,9 +218,9 @@ const Organization = () => {
                   </li>
                   <li>
                     <Text>
-                      <Link className={`h-16 ${pathname.endsWith('/hooks') ? 'bg-slate-100' : ''} hover:bg-slate-100 transition-all ease-out duration-200 flex items-center leading-10 px-6 font-medium`} to={`/dashboard/organizations/${id}`}>
+                      <Link className={`h-16 ${pathname.endsWith('/hooks') ? 'bg-slate-100' : ''} hover:bg-slate-100 transition-all ease-out duration-200 flex items-center leading-10 px-6 font-medium`} to={`/dashboard/organizations/${id}/hooks`}>
                         <Anchor className="text-slate-800 mr-2" />
-                        Hooks <small className='ml-2'>(Coming soon)</small>
+                        Hooks <small className='ml-2 text-xs text-slate-400'>(Coming soon)</small>
                       </Link>
                     </Text>
                   </li>
@@ -255,13 +234,21 @@ const Organization = () => {
                   </li>
                 </ul>
               </div>
-              <div className="block w-full md:w-4/5 py-10 px-8 md:px-10">
+              <div className="block w-full md:w-4/6 xl:w-4/5 py-10 px-8 md:px-10">
                 {pathname.endsWith(`/dashboard/organizations/${id}`) ?
                   <OrgMembers orgId={`${id}`} />
                   : null}
 
                 {pathname.endsWith(`/dashboard/organizations/${id}/settings`) ?
                   <OrgSettings orgId={`${id}`} />
+                  : null}
+
+                {pathname.endsWith(`/dashboard/organizations/${id}/forms`) ?
+                  <OrgForms orgId={`${id}`} />
+                  : null}
+
+                {pathname.endsWith(`/dashboard/organizations/${id}/hooks`) ?
+                  <OrgHooks orgId={`${id}`} />
                   : null}
               </div>
             </div> : <div className="flex items-center">
@@ -272,7 +259,54 @@ const Organization = () => {
       </section>
     </div>
 
-  </DashboardLayout >
+    <Modal title={modalTitle} description={modalDescription} onClose={() => setShowModal('')} isVisible={showModal.length > 0} >
+      {showModal === 'delete'
+        ? <div>{orgDeleteError
+          ? <div className="bg-red-100 rounded p-4 mb-8 text-red-600">{(orgDeleteError as any)?.message ?? 'Unknown error.'}</div>
+          : null
+        }<div>
+            <div className="mb-8">
+              <Label>Name</Label>
+              <Heading as="h4">{input?.name}</Heading>
+            </div>
+            <div className="flex flex-col md:flex-row">
+              {!isDeleting ? <Button onClick={() => {
+                setShowModal('');
+              }} variant="grayNoWidth" disabled={isDeleting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
+                {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
+              </Button> : null}
+              <Button onClick={onSubmitDelete} className="flex justify-center items-center" type="button">
+                {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        : null}
+
+      {showModal === 'edit'
+        ? <form onSubmit={onSubmitFormEdit}>
+          <div className="mb-6">
+            <Label htmlFor="name" className="mb-2">Name</Label>
+            <Input value={input?.name} onChange={onChangeInput('name')} disabled={isUpdating} className="w-full" name="name" id="name" placeholder="Ex: My House" />
+          </div>
+          {orgUpdateError
+            ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{(orgUpdateError as any)?.message ?? 'Unknown error.'}</div>
+            : null
+          }
+          <div className="flex flex-col md:flex-row">
+            {!isUpdating ? <Button onClick={() => {
+              setShowModal('');
+            }} variant="grayNoWidth" disabled={isUpdating} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
+              {isUpdating ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
+            </Button> : null}
+            <Button className="flex justify-center items-center" type="submit">
+              {isUpdating ? <Loader className="h-6 stroke-slate-600" /> : 'Update'}
+            </Button>
+          </div>
+        </form>
+        : null}
+    </Modal>
+  </DashboardLayout>
 };
 
 // Exports

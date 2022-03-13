@@ -16,16 +16,10 @@ const variants: VariantsType = {
   none: `border border-gray-300 px-4 transition-all ease-in-out duration-200 disabled:opacity-60`
 }
 
-// const paddings: PaddingsType = {
-//   none: '',
-//   default: `px-8`
-// }
-
-
 // Main component
 // ========================================================
-const Input = ({ className = '', variant = 'default', ...props }) => {
-  return <input autoComplete="off" className={`${variants?.[variant as keyof VariantsType]} ${className}`} {...props} />;
+const Input = ({ className = '', variant = 'default', forwardRef = undefined, ...props }) => {
+  return <input ref={forwardRef} autoComplete="off" className={`${variants?.[variant as keyof VariantsType]} ${className}`} {...props} />;
 };
 
 // Imports

@@ -60,7 +60,7 @@ const DEFAULT_HEADERS = {
  * @param filters
  * @returns
  */
-const buildQuery = (filters: PayloadType) => {
+const buildQuery = (filters: Partial<PayloadType>) => {
   let query: any = {};
 
   if (filters.q) {
@@ -124,8 +124,40 @@ const AUTH = {
 const USERS = {
   LIST: () => {},
   CREATE: () => {},
-  READ: () => {},
-  UPDATE: () => {},
+  READ: async ({ token, id }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/users/${id}`, {
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  UPDATE: async ({ token, id, payload }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/users/${id}`, {
+      method: "put",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
   DELETE: () => {},
 };
 
@@ -193,7 +225,6 @@ const ORGS = {
       },
     });
 
-    console.log(result.status);
     const json = await result.json();
 
     if (!result.ok) {
@@ -202,8 +233,41 @@ const ORGS = {
 
     return json?.data ?? json;
   },
-  UPDATE: async () => {},
-  DELETE: async () => {},
+  UPDATE: async ({ token, id, payload }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/orgs/${id}`, {
+      method: "put",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  DELETE: async ({ token, id }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/orgs/${id}`, {
+      method: "delete",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
 };
 
 /**
@@ -264,15 +328,173 @@ const MEMBERS = {
     return json?.data ?? json;
   },
   READ: () => {},
-  UPDATE: () => {},
-  DELETE: () => {},
+  UPDATE: async ({ token, id, payload }: Partial<PayloadType>) => {
+    const result = await fetch(`${API_URI}/orgs/${id}/members/${payload?.id}`, {
+      method: "put",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  DELETE: async ({ token, id, payload }: PayloadType) => {
+    const result = await fetch(`${API_URI}/orgs/${id}/members/${payload?.id}`, {
+      method: "delete",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+};
+
+const FORMS = {
+  LIST: async ({
+    token,
+    id,
+    q,
+    take,
+    skip,
+    orderBy,
+    sort,
+    include,
+  }: PayloadType) => {
+    const result = await fetch(
+      `${API_URI}/orgs/${id}/forms${buildQuery({
+        q,
+        take,
+        skip,
+        orderBy,
+        sort,
+        include,
+      })}`,
+      {
+        headers: {
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  CREATE: async ({ token, id, payload }: PayloadType) => {
+    const result = await fetch(`${API_URI}/orgs/${id}/forms`, {
+      method: "post",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  UPDATE: async ({ token, id, payload }: PayloadType) => {
+    const result = await fetch(`${API_URI}/orgs/${id}/forms/${payload?.id}`, {
+      method: "put",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+  DELETE: async ({ token, id, payload }: PayloadType) => {
+    const result = await fetch(`${API_URI}/orgs/${id}/forms/${payload?.id}`, {
+      method: "delete",
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
 };
 
 /**
  *
  */
 const HOOKS = {
-  LIST: () => {},
+  LIST: async ({
+    token,
+    id,
+    q,
+    take,
+    skip,
+    orderBy,
+    sort,
+    include,
+  }: PayloadType) => {
+    const result = await fetch(
+      `${API_URI}/orgs/${id}/hooks${buildQuery({
+        q,
+        take,
+        skip,
+        orderBy,
+        sort,
+        include,
+      })}`,
+      {
+        headers: {
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
   CREATE: () => {},
   READ: () => {},
   UPDATE: () => {},
@@ -282,9 +504,27 @@ const HOOKS = {
 /**
  *
  */
-const VERIFY = {
+const PUBLIC_VERIFY = {
+  CREATE: async ({ id, payload }: PayloadType) => {
+    const result = await fetch(`${API_URI}/public/verify/${id}`, {
+      method: "post",
+      headers: {
+        ...DEFAULT_HEADERS,
+      },
+      body: JSON.stringify(payload),
+      credentials: "include",
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
   GET: async ({ id }: PayloadType) => {
-    const result = await fetch(`${API_URI}/verify/${id}`, {
+    const result = await fetch(`${API_URI}/public/verify/${id}`, {
       headers: {
         ...DEFAULT_HEADERS,
       },
@@ -301,6 +541,93 @@ const VERIFY = {
   SEND: async () => {},
 };
 
+/**
+ *
+ */
+const PUBLIC_NONCE = {
+  CREATE: async ({ payload }: PayloadType) => {
+    const result = await fetch(`${API_URI}/public/nonce`, {
+      method: "post",
+      headers: {
+        ...DEFAULT_HEADERS,
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+};
+
+/**
+ *
+ */
+const PUBLIC_ORG = {
+  READ: async ({ id }: PayloadType) => {
+    const result = await fetch(`${API_URI}/public/orgs/${id}`, {
+      headers: {
+        ...DEFAULT_HEADERS,
+      },
+    });
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json?.data ?? json;
+  },
+};
+
+/**
+ *
+ */
+const PUBLIC_ORG_MEMBERS = {
+  LIST: async ({ id, q, take, skip, orderBy, sort, include }: PayloadType) => {
+    const result = await fetch(
+      `${API_URI}/public/orgs/${id}/members${buildQuery({
+        q,
+        take,
+        skip,
+        orderBy,
+        sort,
+        include,
+      })}`,
+      {
+        headers: {
+          ...DEFAULT_HEADERS,
+        },
+      }
+    );
+
+    const json = await result.json();
+
+    if (!result.ok) {
+      throw new Error(json?.errors?.message || json?.errors || "Unknown error");
+    }
+
+    return json;
+  },
+};
+
 // Exports
 // ========================================================
-export { AUTH, USERS, ORGS, MEMBERS, HOOKS, VERIFY };
+export {
+  AUTH,
+  USERS,
+  ORGS,
+  MEMBERS,
+  FORMS,
+  HOOKS,
+  PUBLIC_VERIFY,
+  PUBLIC_NONCE,
+  PUBLIC_ORG,
+  PUBLIC_ORG_MEMBERS,
+};

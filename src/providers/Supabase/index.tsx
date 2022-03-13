@@ -14,6 +14,7 @@ interface StateType {
     signIn: (creds: { email: string, password: string }) => void;
     signUp: (creds: { email: string, password: string }) => void;
     signOut: () => void;
+    resetPassword: (creds: { email: string }) => void;
     reset: () => void;
   },
   table: {
@@ -50,6 +51,9 @@ const actionTypes = {
     SIGNOUT_LOADING: 'SIGNOUT_LOADING',
     SIGNOUT_ERROR: 'SIGNOUT_ERROR',
     SIGNOUT_SUCCESS: 'SIGNOUT_SUCCESS',
+    RESETPASSWORD_LOADING: 'RESETPASSWORD_LOADING',
+    RESETPASSWORD_ERROR: 'RESETPASSWORD_ERROR',
+    RESETPASSWORD_SUCCESS: 'RESETPASSWORD_SUCCESS',
     RESET: 'RESET',
   },
   TABLE: {
@@ -70,8 +74,9 @@ const initialState: StateType = {
     user: null,
     session: null,
     signIn: (creds: { email: string, password: string }) => { },
-    signUp: (creds: { email: string, password: string }) => { },
+    signUp: (_creds: { email: string, password: string }) => { },
     signOut: () => { },
+    resetPassword: (_creds) => { },
     reset: () => { }
   },
   table: {
@@ -218,6 +223,39 @@ const reducer = (state: StateType, action: {
           user: null
         }
       };
+
+
+    case actionTypes.AUTH.RESETPASSWORD_LOADING:
+      return {
+        ...state,
+        auth: {
+          ...state.auth,
+          isLoading: true,
+          hasError: false,
+          error: null
+        }
+      }
+    case actionTypes.AUTH.RESETPASSWORD_ERROR:
+      return {
+        ...state,
+        auth: {
+          ...state.auth,
+          isLoading: false,
+          hasError: true,
+          error: action.value,
+          session: null,
+          user: null
+        }
+      };
+    case actionTypes.AUTH.RESETPASSWORD_SUCCESS:
+      return {
+        ...state,
+        auth: {
+          ...state.auth,
+          isLoading: false,
+        }
+      };
+
     case actionTypes.AUTH.RESET:
       return {
         ...state,
@@ -326,6 +364,23 @@ const SupabaseProvider: React.FC<{ client: SupabaseClient }> = ({ children, clie
 
   /**
    * 
+   * @param creds 
+   */
+  const resetPassword = async (creds: { email: string }) => {
+    dispatch({ type: actionTypes.AUTH.RESETPASSWORD_LOADING });
+
+    const { error } = await client.auth.api.resetPasswordForEmail(creds.email);
+
+    if (error) {
+      dispatch({ type: actionTypes.AUTH.RESETPASSWORD_ERROR, value: error });
+      return;
+    }
+
+    dispatch({ type: actionTypes.AUTH.RESETPASSWORD_SUCCESS });
+  };
+
+  /**
+   * 
    * @param callback 
    * @returns 
    */
@@ -392,6 +447,7 @@ const SupabaseProvider: React.FC<{ client: SupabaseClient }> = ({ children, clie
       signUp,
       signIn,
       signOut,
+      resetPassword,
       reset
     },
     table: {
