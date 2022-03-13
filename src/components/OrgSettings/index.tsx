@@ -10,27 +10,6 @@ import Button from "../../components/Button";
 import Loader from '../../components/Loader';
 import Label from '../../components/Label';
 import Input from '../../components/Input';
-import useDebounce from '../../hooks/useDebounce';
-
-const getModalTitle = (modal: string) => {
-  switch (modal) {
-    case 'edit':
-      return {
-        modalTitle: 'Edit',
-        modalDescription: 'Edit member details'
-      }
-    case 'create':
-      return {
-        modalTitle: 'Create',
-        modalDescription: 'New member'
-      }
-    default:
-      return {
-        modalTitle: '',
-        modalDescription: ''
-      }
-  };
-}
 
 // Main page
 // ========================================================
@@ -44,7 +23,6 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
   const inputSecretKey = useRef();
   const isMounted = useRef(false);
   const { session } = useAuth();
-  const [showModal, setShowModal] = useState('');
 
   // Requests
   /**
@@ -91,7 +69,7 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
         });
       }, 1000);
     }
-  }
+  };
 
   /**
    * 
@@ -115,14 +93,6 @@ const OrgSettings = ({ orgId }: { orgId: string }) => {
       isMounted.current = false;
     }
   }, []);
-
-  /**
-   * 
-   */
-  useEffect(() => {
-    if (!isMounted.current || !membersCreateData || membersCreateError) return;
-    setShowModal('');
-  }, [membersCreateData]);
 
   /**
    * 

@@ -8,9 +8,10 @@ import SignInPage from '../pages/SignIn';
 import OrganizationsPage from '../pages/Organizations';
 import OrganizationPage from '../pages/Organization';
 import AccountPage from '../pages/Account';
-import ValidatePage from '../pages/Validate';
 import NotFoundPage from '../pages/NotFound';
 import ForgotPage from '../pages/Forgot';
+import PublicVerify from '../pages/PublicVerify';
+import PublicOrgPage from '../pages/PublicOrg';
 
 // Main Routes
 // ========================================================
@@ -27,7 +28,8 @@ const RootRoutes = () => {
     <Route path="/dashboard/organizations/:id/hooks" element={<OrganizationPage />} />
     <Route path="/dashboard/organizations/:id/forms" element={<OrganizationPage />} />
     <Route path="/dashboard/account" element={<AccountPage />} />
-    <Route path="/validate/:id" element={<ValidatePage />} />
+    <Route path="/p/verify/:id" element={<PublicVerify />} />
+    <Route path="/p/org/:id" element={<PublicOrgPage />} />
     <Route path="*" element={<NotFoundPage />} />
   </Routes>
 };

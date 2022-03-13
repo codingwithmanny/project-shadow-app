@@ -1,11 +1,11 @@
 // Imports
 // ========================================================
-import { createContext, useEffect, useReducer, useContext, useState } from 'react';
+import { createContext, useEffect, useReducer, useContext, useState, useCallback } from 'react';
 import { useMutation } from 'react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FullLoader from '../../components/FullLoader';
 import { AUTH } from '../../queries';
-import { useAuth, useTable } from '../Supabase';
+import { useAuth } from '../Supabase';
 
 // Types
 interface StateType {
@@ -16,7 +16,7 @@ interface StateType {
   profile: {
     [key: string]: any;
   } | null,
-  getProfile: () => void;
+  getUser: () => void;
 }
 
 // Config
@@ -30,7 +30,7 @@ const initialState: StateType = {
   hasError: false,
   user: null,
   profile: null,
-  getProfile: () => { }
+  getUser: () => { }
 };
 
 /**
@@ -47,7 +47,7 @@ const actionTypes = {
  */
 const PATHS = {
   ROOT: ['', '/'],
-  PUBLIC: ['/signin', '/signup', '/validate', '/members', '/forgot'],
+  PUBLIC: ['/signin', '/signup', '/validate', '/members', '/forgot', '/org'],
   PRIVATE: '/dashboard'
 }
 
@@ -99,13 +99,27 @@ const AppAuthProvider: React.FC = ({ children }) => {
   const [user, setUser] = useState<any>();
 
   // Requests
+  /**
+   * 
+   */
   const { data: authUser, mutate: authSignIn } = useMutation(AUTH.SIGNIN)
 
+  // Functions
+  const getUser = useCallback(() => {
+    authSignIn({
+      id: `${session?.user?.id}`,
+      email: `${session?.user?.email}`,
+    });
+  }, [session]);
+
+  // Hooks
   /**
    * 
    */
   useEffect(() => {
+    console.log('setUser - before');
     if (!authUser) return;
+    console.log('setUser');
     setUser(authUser);
   }, [authUser]);
 
@@ -137,8 +151,6 @@ const AppAuthProvider: React.FC = ({ children }) => {
     setIsAppLoading(false);
   }, [pathname, session, authUser, isLoading])
 
-
-
   // Render
   /**
    * 
@@ -148,7 +160,7 @@ const AppAuthProvider: React.FC = ({ children }) => {
   /**
    * 
    */
-  return <AppAuthContext.Provider value={{ ...state, user }}>{children}</AppAuthContext.Provider>
+  return <AppAuthContext.Provider value={{ ...state, user, getUser }}>{children}</AppAuthContext.Provider>
 }
 
 // Hooks

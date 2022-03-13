@@ -2,7 +2,7 @@
 // ========================================================
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation } from 'react-query'
-import { Search } from 'react-feather';
+import { Filter, Search, X } from 'react-feather';
 import { useAuth } from "../../providers/Supabase";
 import { MEMBERS } from '../../queries';
 import Heading from "../../components/Heading";
@@ -13,7 +13,10 @@ import Label from '../../components/Label';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
 import useDebounce from '../../hooks/useDebounce';
+import Select from '../Select';
 
+// Config
+// ========================================================
 const getModalTitle = (modal: string) => {
   switch (modal) {
     case 'edit':
@@ -26,13 +29,18 @@ const getModalTitle = (modal: string) => {
         modalTitle: 'Create',
         modalDescription: 'New member'
       }
+    case 'delete':
+      return {
+        modalTitle: 'Confirm Deletion',
+        modalDescription: 'Are you sure you want to delete?'
+      }
     default:
       return {
         modalTitle: '',
         modalDescription: ''
       }
   };
-}
+};
 
 // Main page
 // ========================================================
@@ -43,13 +51,16 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
   const isMounted = useRef(false);
   const { session } = useAuth();
   const [input, setInput] = useState<{
+    id?: string;
     name: string;
     walletAddress: string;
-    enabled?: boolean;
+    active?: boolean;
+    validated?: Date;
   }>({
+    id: undefined,
     name: '',
     walletAddress: '',
-    enabled: undefined
+    active: undefined
   });
   const [showModal, setShowModal] = useState('');
   const { modalTitle, modalDescription } = getModalTitle(showModal)
@@ -63,7 +74,17 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
   /**
    * CREATE
    */
-  const { isLoading: isSubmitting, data: membersCreateData, error: membersCreateError, mutate: membersCreate } = useMutation(MEMBERS.CREATE);
+  const { isLoading: isSubmitting, data: memberCreateData, error: memberCreateError, mutate: memberCreate } = useMutation(MEMBERS.CREATE);
+
+  /**
+   * UPDATE
+   */
+  const { isLoading: isUpdating, data: memberUpdateData, error: memberUpdateError, mutate: memberUpdate } = useMutation(MEMBERS.UPDATE);
+
+  /**
+   * DELETE
+   */
+  const { isLoading: isDeleting, data: memberDeleteData, error: memberDeleteError, mutate: memberDelete } = useMutation(MEMBERS.DELETE);
 
   // Functions
   /**
@@ -73,7 +94,7 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
     setInput({
       name: '',
       walletAddress: '',
-      enabled: undefined
+      active: false
     });
     setShowModal('create');
   }
@@ -81,7 +102,33 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
   /**
    * 
    */
-  const onClickEditMember = (id: string) => () => {
+  const onClickEditMember = (member: {
+    id: string;
+    name: string;
+    walletAddress: string;
+    active?: boolean;
+  }) => (event?: any) => {
+    console.log(event.key);
+    if (event.key && (event.target instanceof HTMLTableRowElement && event.key !== 'Enter') || (event.key && !(event.target instanceof HTMLTableRowElement))) return;
+    setInput(member);
+    setShowModal('edit');
+  };
+
+  /**
+   * 
+   * @param member 
+   * @returns 
+   */
+  const onClickDeleteMember = (member: {
+    id: string;
+    name: string;
+    walletAddress: string;
+    active?: boolean;
+  }) => (event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    setInput(member);
+    setShowModal('delete');
   }
 
   /**
@@ -102,16 +149,43 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
    */
   const onChangeSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-  }
+  };
+
+  /**
+   * 
+   * @param event 
+   */
+  const onChangeSelect = (field: string) => (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setInput({
+      ...input,
+      [field]: event.target.value === 'true'
+    });
+  };
 
   /**
    * 
    * @param event 
    */
   const onSubmitFormCreate = (event: React.FormEvent<HTMLFormElement>) => {
-    membersCreate({ token: session?.access_token, id: orgId, payload: input });
+    memberCreate({ token: session?.access_token, id: orgId, payload: input });
     event.preventDefault();
-  }
+  };
+
+  /**
+   * 
+   * @param event 
+   */
+  const onSubmitFormUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+    memberUpdate({ token: session?.access_token, id: orgId, payload: input });
+    event.preventDefault();
+  };
+
+  /**
+   * 
+   */
+  const onSubmitDelete = () => {
+    memberDelete({ token: session?.access_token, id: orgId, payload: input });
+  };
 
   // Hooks
   /**
@@ -119,7 +193,6 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
    */
   useEffect(() => {
     isMounted.current = true;
-    membersList({ token: session?.access_token, id: orgId });
     return () => {
       isMounted.current = false;
     }
@@ -129,19 +202,28 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
    * 
    */
   useEffect(() => {
-    if (!isMounted.current || !membersCreateData || membersCreateError) return;
-
+    if (!isMounted.current || !memberCreateData || memberCreateError) return;
     membersList({ token: session?.access_token, id: orgId });
     setShowModal('');
     setSearch('');
-  }, [membersCreateData]);
+  }, [memberCreateData]);
+
+  /**
+   * 
+   */
+  useEffect(() => {
+    if (!isMounted.current || !memberUpdateData || memberUpdateError) return;
+    membersList({ token: session?.access_token, id: orgId });
+    setShowModal('');
+    setSearch('');
+  }, [memberUpdateData]);
 
   /**
    * 
    */
   useEffect(() => {
     if (!isMounted.current) return;
-    membersList({ token: session?.access_token, id: orgId, q: debouncedSearch });
+    membersList({ token: session?.access_token, id: orgId, q: debouncedSearch, include: 'tagsCount' });
   }, [debouncedSearch]);
 
   // Render
@@ -150,9 +232,28 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
       <Heading as="h4">Members</Heading>
       <Button onClick={onClickAddMember}>Add Member</Button>
     </div>
-    <div className="relative block mb-8">
+    <div className="relative flex mb-8">
       <Search className="w-4 text-slate-400 absolute left-4 top-0 bottom-0 my-auto" />
       <Input value={search} onChange={onChangeSearch} disabled={isRetrieving} variant="none" className="w-full h-12 rounded-full pl-10 pr-6" type="search" placeholder="Search for members" />
+      {/* <div className="ml-6 relative">
+        <Button>
+          <div className="w-6 h-6 block">
+            <span className="bg-white mx-auto mt-2 mb-1 block w-5 rounded" style={{ height: '2px ' }}></span>
+            <span className="bg-white mx-auto mb-1 block w-3 rounded" style={{ height: '2px ' }}></span>
+            <span className="bg-white mx-auto block w-1 rounded" style={{ height: '2px ' }}></span>
+          </div>
+        </Button>
+        <div className="absolute w-96 rounded-lg bg-white p-4 top-14 right-0 border border-slate-200 shadow-lg">
+          <Input value={search} onChange={onChangeSearch} disabled={isRetrieving} variant="none" className="w-full h-10 bg-slate-50 rounded-full px-6 mb-4" type="search" placeholder="Search for tag" />
+          <table>
+            <tbody>
+              <tr>
+                <td>adsad</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div> */}
     </div>
     <div className="w-full">
       {isRetrieving ? <div className={`rounded-lg bg-white border border-slate-200 p-8 transition-colors ease-in-out duration-200`}>
@@ -161,18 +262,21 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
           <Text>Loading...</Text>
         </div>
       </div> : membersListData && membersListData.length > 0 ?
-        <div className="border border-slate-200 rounded-lg px-4">
+        <div className="border border-slate-200 rounded-lg px-4 overflow-scroll">
           <table className="w-full mb-4">
             <thead>
               <tr className="border-b border-slate-200">
                 <th className="py-4 text-left text-sm font-medium text-slate-500">Address</th>
+                <th className="py-4 pl-4 text-left text-sm font-medium text-slate-500">Name</th>
                 <th className="py-4 pl-4 text-left text-sm font-medium text-slate-500">Tags</th>
+                <th className="py-4 pl-4 text-left text-sm font-medium text-slate-500">Validated</th>
+                <th className="py-4 pl-4 text-left text-sm font-medium text-slate-500">Access</th>
               </tr>
             </thead>
             <tbody>
               {membersListData.map((member: any) =>
-                <tr key={`${member.id}`} onClick={onClickEditMember(member.id)} className="border-b border-l-slate-200 hover:bg-slate-50 cursor-pointer">
-                  <td className="p-4 w-3/4">
+                <tr tabIndex={0} key={`${member.id}`} onKeyUp={onClickEditMember(member)} onClick={onClickEditMember(member)} className="border-b border-l-slate-200 hover:bg-slate-50 cursor-pointer">
+                  <td className="p-4 w-2/6">
                     <div className="flex items-center">
                       <svg height="48" width="48" className="block h-12 w-12 fill-slate-200 mr-4">
                         <circle cx="24" cy="24" r="24" />
@@ -181,8 +285,20 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
                       <code className="text-slate-500">{member?.walletAddress}</code>
                     </div>
                   </td>
-                  <td className="p-4 w-1/4">
-                    {/*<span className="items-center text-sm font-medium bg-slate-100 text-slate-600 rounded-full px-3 py-1">7 Tags</span>*/}
+                  <td className="p-4 w-1/6">
+                    <Text>{member?.name}</Text>
+                  </td>
+                  <td className="p-4 w-1/6">
+                    <Text><small>(Coming soon)</small></Text>
+                  </td>
+                  <td className="p-4 w-1/6">
+                    <span className={`items-center text-sm font-medium ${member?.validated ? 'bg-blue-100 text-blue-400' : 'bg-slate-100 text-slate-400'} rounded-full px-3 py-1`}>{member?.validated ? 'Validated' : 'Incomplete'}</span>
+                  </td>
+                  <td className="p-4 w-1/6">
+                    <span className={`items-center text-sm font-medium ${member?.active ? 'bg-green-100 text-green-400' : 'bg-red-100 text-red-400'} rounded-full px-3 py-1`}>{member?.active ? 'Active' : 'Disabled'}</span>
+                  </td>
+                  <td className="p-4 w-1/6 text-right">
+                    <Button onClick={onClickDeleteMember(member)} className="h-10 px-6" variant="gray" padding="none"><X /></Button>
                   </td>
                 </tr>)}
             </tbody>
@@ -207,8 +323,12 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
             <Label htmlFor="walletAddress" className="mb-2">Wallet Address</Label>
             <Input value={input?.walletAddress} onChange={onChangeInput('walletAddress')} disabled={isSubmitting} className="w-full" name="walletAddress" id="walletAddress" placeholder="Ex: 0x0123456789012345678901234567890123456789" />
           </div>
-          {membersCreateError
-            ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{(membersCreateError as any)?.message ?? 'Unknown error.'}</div>
+          <div className="mb-6">
+            <Label htmlFor="active" className="mb-2">Active</Label>
+            <Select value={input.active} onChange={onChangeSelect('active')} options={[{ value: false, label: 'Disabled' }, { value: true, label: 'Active' }] as any} />
+          </div>
+          {memberCreateError
+            ? <div className=" bg-red-100 rounded p-4 mb-8 text-red-600">{(memberCreateError as any)?.message ?? 'Unknown error.'}</div>
             : null
           }
           <div className="flex flex-col md:flex-row">
@@ -223,6 +343,64 @@ const OrgMembers = ({ orgId }: { orgId: string }) => {
             </Button>
           </div>
         </form>
+        : null}
+
+      {showModal === 'edit'
+        ? <div>
+          <form className="mb-8" onSubmit={onSubmitFormUpdate}>
+            <div className="mb-6">
+              <Label htmlFor="name" className="mb-2">Name</Label>
+              <Input value={input?.name} onChange={onChangeInput('name')} disabled={isSubmitting} className="w-full" name="name" id="name" placeholder="Ex: John Wick" />
+            </div>
+            <div className="mb-6">
+              <Label htmlFor="walletAddress" className="mb-2">Wallet Address</Label>
+              <Input value={input?.walletAddress} onChange={onChangeInput('walletAddress')} disabled={isSubmitting} className="w-full" name="walletAddress" id="walletAddress" placeholder="Ex: 0x0123456789012345678901234567890123456789" />
+            </div>
+            <div className="mb-6">
+              <Label htmlFor="active" className="mb-2">Active</Label>
+              <Select value={input.active} onChange={onChangeSelect('active')} options={[{ value: false, label: 'Disabled' }, { value: true, label: 'Active' }] as any} />
+            </div>
+            {memberUpdateError
+              ? <div className="bg-red-100 rounded p-4 mb-8 text-red-600">{(memberUpdateError as any)?.message ?? 'Unknown error.'}</div>
+              : null
+            }
+            <div className="flex flex-col md:flex-row">
+              {!isUpdating ? <Button onClick={() => {
+                setShowModal('');
+              }} variant="grayNoWidth" disabled={isUpdating} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
+                {isUpdating ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
+              </Button> : null}
+              <Button className="flex justify-center items-center" type="submit">
+                {isUpdating ? <Loader className="h-6 stroke-slate-600" /> : 'Update'}
+              </Button>
+            </div>
+          </form>
+          {/* <hr className="mb-8" />
+          <Heading as="h4" className="mb-8">Tags</Heading>
+          <Loader className="stroke-slate-600" /> */}
+        </div>
+        : null}
+
+      {showModal === 'delete'
+        ? <div>{memberDeleteError
+          ? <div className="bg-red-100 rounded p-4 mb-8 text-red-600">{(memberDeleteError as any)?.message ?? 'Unknown error.'}</div>
+          : null
+        }
+          <div className="mb-8">
+            <Label>Name</Label>
+            <Heading as="h4">{input?.name}</Heading>
+          </div>
+          <div className="flex flex-col md:flex-row">
+            {!isDeleting ? <Button onClick={() => {
+              setShowModal('');
+            }} variant="grayNoWidth" disabled={isDeleting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
+              {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
+            </Button> : null}
+            <Button onClick={onSubmitDelete} className="flex justify-center items-center" type="button">
+              {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Delete'}
+            </Button>
+          </div>
+        </div>
         : null}
     </Modal>
   </div>

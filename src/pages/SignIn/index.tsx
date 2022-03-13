@@ -1,6 +1,6 @@
 // Imports
 // ========================================================
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from '../../providers/Supabase';
 
@@ -46,6 +46,15 @@ const SignInPage = () => {
       [field]: event.target.value
     });
   };
+
+  // Hooks
+  /**
+   * 
+   */
+  useEffect(() => {
+    if (!error) return;
+    setIsSubmitting(false);
+  }, [error]);
 
   // Render
   return <AuthLayout>

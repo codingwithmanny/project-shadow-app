@@ -120,7 +120,7 @@ const OrganizationsPage = () => {
                 <div className="rounded-lg bg-slate-100 py-16 lg:py-24 px-8 w-full">
                   <Heading as="h4" className="text-center mb-2">Nothing yet!</Heading>
                   <Text className="text-center mb-8">Start by creating one.</Text>
-                  <Button variant="gray" className="block mx-auto">Create</Button>
+                  <Button onClick={() => setShowModal('create')} variant="gray" className="block mx-auto">Create</Button>
                 </div>
               </div>
           }
@@ -145,7 +145,6 @@ const OrganizationsPage = () => {
           }} variant="grayNoWidth" disabled={isSubmitting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
             {isSubmitting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
           </Button> : null}
-
           <Button className="flex justify-center items-center" type="submit">
             {isSubmitting ? <Loader className="h-6 stroke-slate-600" /> : 'Create'}
           </Button>

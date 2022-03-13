@@ -93,7 +93,7 @@ const Organization = () => {
   /**
    * 
    */
-  const onClickModalDelete = () => {
+  const onSubmitDelete = () => {
     orgDelete({ token: session?.access_token, id: orgReadData.id })
   }
 
@@ -264,15 +264,21 @@ const Organization = () => {
         ? <div>{orgDeleteError
           ? <div className="bg-red-100 rounded p-4 mb-8 text-red-600">{(orgDeleteError as any)?.message ?? 'Unknown error.'}</div>
           : null
-        }<div className="flex flex-col md:flex-row">
-            {!isDeleting ? <Button onClick={() => {
-              setShowModal('');
-            }} variant="grayNoWidth" disabled={isDeleting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
-              {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
-            </Button> : null}
-            <Button onClick={onClickModalDelete} className="flex justify-center items-center" type="button">
-              {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Delete'}
-            </Button>
+        }<div>
+            <div className="mb-8">
+              <Label>Name</Label>
+              <Heading as="h4">{input?.name}</Heading>
+            </div>
+            <div className="flex flex-col md:flex-row">
+              {!isDeleting ? <Button onClick={() => {
+                setShowModal('');
+              }} variant="grayNoWidth" disabled={isDeleting} className="flex justify-center items-center mb-4 md:mr-4 md:mb-0" type="button">
+                {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Cancel'}
+              </Button> : null}
+              <Button onClick={onSubmitDelete} className="flex justify-center items-center" type="button">
+                {isDeleting ? <Loader className="h-6 stroke-slate-600" /> : 'Delete'}
+              </Button>
+            </div>
           </div>
         </div>
         : null}
